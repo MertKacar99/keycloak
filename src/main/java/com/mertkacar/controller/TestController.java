@@ -1,4 +1,4 @@
-package com.mertkacar.businiess.controller;
+package com.mertkacar.controller;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
