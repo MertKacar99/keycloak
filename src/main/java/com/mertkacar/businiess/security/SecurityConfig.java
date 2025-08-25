@@ -34,7 +34,15 @@ public class SecurityConfig {
                 .logout(l -> l.disable())
                 .authorizeHttpRequests(auth -> auth
                         // === WHITELIST ===
-                        .requestMatchers("/api/public/**").permitAll()
+                                .requestMatchers(
+                                "/api/auth/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**",
+                                "/configuration/**"
+                        ).permitAll()
                         // === Geri kalan ===
                         .anyRequest().authenticated()
                 )
@@ -45,29 +53,30 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    @Order(2)
-    public SecurityFilterChain permitAllElse(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .requestCache(rc -> rc.requestCache(new NullRequestCache()))
-                .formLogin(f -> f.disable())
-                .httpBasic(b -> b.disable())
-                .logout(l -> l.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-resources/**",
-                                "/webjars/**",
-                                "/configuration/**"
-                        ).permitAll()
-                        .anyRequest().permitAll()
-                );
-
-        return http.build();
-    }
+//    @Bean
+//    @Order(2)
+//    public SecurityFilterChain permitAllElse(HttpSecurity http) throws Exception {
+//        http
+//                .csrf(csrf -> csrf.disable())
+//                .requestCache(rc -> rc.requestCache(new NullRequestCache()))
+//                .formLogin(f -> f.disable())
+//                .httpBasic(b -> b.disable())
+//                .logout(l -> l.disable())
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers(
+//                                "/api/auth/**",
+//                                "/swagger-ui.html",
+//                                "/swagger-ui/**",
+//                                "/v3/api-docs/**",
+//                                "/swagger-resources/**",
+//                                "/webjars/**",
+//                                "/configuration/**"
+//                        ).permitAll()
+//                        .anyRequest().permitAll()
+//                );
+//
+//        return http.build();
+//    }
 
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter(
