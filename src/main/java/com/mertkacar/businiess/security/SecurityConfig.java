@@ -1,9 +1,9 @@
 package com.mertkacar.businiess.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -13,10 +13,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
@@ -26,6 +23,7 @@ public class SecurityConfig {
     @Bean
     @Order(1)
     public SecurityFilterChain apiChain(HttpSecurity http) throws Exception {
+
         http
                 .securityMatcher("/api/**")
                 .csrf(csrf -> csrf.disable())
@@ -35,11 +33,13 @@ public class SecurityConfig {
                 .httpBasic(b -> b.disable())
                 .logout(l -> l.disable())
                 .authorizeHttpRequests(auth -> auth
+                        // === WHITELIST ===
                         .requestMatchers("/api/public/**").permitAll()
+                        // === Geri kalan ===
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt ->
-                        jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        jwt.jwtAuthenticationConverter(jwtAuthenticationConverter(null)))
                 );
 
         return http.build();
@@ -54,29 +54,53 @@ public class SecurityConfig {
                 .formLogin(f -> f.disable())
                 .httpBasic(b -> b.disable())
                 .logout(l -> l.disable())
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**",
+                                "/configuration/**"
+                        ).permitAll()
+                        .anyRequest().permitAll()
+                );
 
         return http.build();
     }
 
-
     @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+    public JwtAuthenticationConverter jwtAuthenticationConverter(
+            @Value("${keycloak.client-id}") String clientId) {
+
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            List<org.springframework.security.core.GrantedAuthority> out = new ArrayList<>();
+
+            // === Realm roles -> ROLE_* ===
+            Map<String, Object> realmAccess = jwt.getClaim("realm_access");
+            if (realmAccess != null) {
+                Object rolesObj = realmAccess.get("roles");
+                if (rolesObj instanceof Collection<?> roles) {
+                    roles.forEach(r -> out.add(new SimpleGrantedAuthority("ROLE_" + r.toString())));
+                }
+            }
+
+            // === Client roles -> PERM_* ===
             Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
-            if (resourceAccess == null) return Collections.emptyList();
+            if (resourceAccess != null) {
+                Map<String, Object> app = (Map<String, Object>) resourceAccess.get(clientId);
+                if (app != null) {
+                    Object rolesObj = app.get("roles");
+                    if (rolesObj instanceof Collection<?> roles) {
+                        roles.forEach(r -> out.add(new SimpleGrantedAuthority("PERM_" + r.toString())));
+                    }
+                }
+            }
 
-            Map<String, Object> enterpriseApp = (Map<String, Object>) resourceAccess.get("enterprise-app");
-            if (enterpriseApp == null) return Collections.emptyList();
-
-            List<String> roles = (List<String>) enterpriseApp.get("roles");
-            if (roles == null) return Collections.emptyList();
-
-            return roles.stream()
-                    .map(role -> new SimpleGrantedAuthority(role)) // ör: "ROLE_ADMIN"
-                    .collect(Collectors.toList());
+            return out; // ✅ Artık List<GrantedAuthority> döndürüyoruz
         });
         return converter;
     }
+
 }
