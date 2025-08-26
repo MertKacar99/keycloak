@@ -24,10 +24,13 @@ public class AdminUserRolManager implements AdminUserRolService {
     @Value("${keycloak.client-id}")
     private String appClientId;
 
-    // Sadece bu roller atanabilir (güvenlik için beyaz liste)
+
+    // Sadece bu roller atanabilir (güvenlik için beyaz liste),
+    // TODO:  Buradaki WHITE_LIST rolleri ve  permissionları Sistem parametrelerinden çekilebilir hale getirmelisin.
     private static final Set<String> ALLOWED_REALM_ROLES = Set.of("ROLE_ADMIN", "ROLE_USER");
     private static final Set<String> ALLOWED_CLIENT_ROLES = Set.of("USERS_READ", "USERS_UPDATE", "USERS_DELETE");
 
+    @Transactional()
     @Override
     public Map<String, Object> assignRoles(AssignRolesRequest req) {
         if (req.getTargetUserId() == null || req.getTargetUserId().isBlank()) {
