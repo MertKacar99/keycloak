@@ -91,7 +91,7 @@ public class SecurityConfig {
             if (realmAccess != null) {
                 Object rolesObj = realmAccess.get("roles");
                 if (rolesObj instanceof Collection<?> roles) {
-                    roles.forEach(r -> out.add(new SimpleGrantedAuthority("ROLE_" + r.toString())));
+                    roles.forEach(r -> out.add(new SimpleGrantedAuthority(  r.toString())));
                 }
             }
 

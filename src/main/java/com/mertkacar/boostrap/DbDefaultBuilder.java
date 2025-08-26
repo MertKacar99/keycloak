@@ -70,32 +70,41 @@ public class DbDefaultBuilder {
             ensureClientRole(rr, clientUuid, "USERS_DELETE");
 
             // ==== 2) Realm Role (USER) ====
-            ensureRealmRole(rr, "ROLEUSER");
+            ensureRealmRole(rr, "ROLE_USER");
+            ensureRealmRole(rr, "ROLE_ADMIN");
+
 
             // ==== 3) Örnek kullanıcılar ====
             String viewerId    = ensureUser(rr, "viewer",    "viewer@enterprise.local",    true);
             String editorId    = ensureUser(rr, "editor",    "editor@enterprise.local",    true);
             String moderatorId = ensureUser(rr, "moderator", "moderator@enterprise.local", true);
 
+            String adminId = ensureUser(rr, "admin", "admin@enterprise.local", true);
+            setPassword(rr, adminId, "admin", false);
             setPassword(rr, viewerId,    "viewer",    false);
             setPassword(rr, editorId,    "editor",    false);
             setPassword(rr, moderatorId, "moderator", false);
 
             // ==== 4) Client role assignment (permissions) ====
+            assignClientRoles(rr, clientUuid, adminId,     List.of("USERS_READ", "USERS_UPDATE", "USERS_DELETE"));
             assignClientRoles(rr, clientUuid, viewerId,    List.of("USERS_READ"));
             assignClientRoles(rr, clientUuid, editorId,    List.of("USERS_READ", "USERS_UPDATE"));
             assignClientRoles(rr, clientUuid, moderatorId, List.of("USERS_READ", "USERS_UPDATE", "USERS_DELETE"));
 
             // ==== 5) Realm role assignment ====
-            assignRealmRoles(rr, viewerId,    List.of("USER"));
-            assignRealmRoles(rr, editorId,    List.of("USER"));
-            assignRealmRoles(rr, moderatorId, List.of("USER"));
+            assignRealmRoles(rr, viewerId,    List.of("ROLE_USER"));
+            assignRealmRoles(rr, editorId,    List.of("ROLE_USER"));
+            assignRealmRoles(rr, moderatorId, List.of("ROLE_USER"));
+            assignRealmRoles(rr, adminId,     List.of("ROLE_ADMIN"));
 
             // ==== 6) Grup işlemleri ====
             String userGroupId = ensureGroup(rr, "user");
+            String adminGroupId = ensureGroup(rr, "admin");
             addUserToGroup(rr, viewerId, userGroupId);
             addUserToGroup(rr, editorId, userGroupId);
             addUserToGroup(rr, moderatorId, userGroupId);
+
+            addUserToGroup(rr, adminId, adminGroupId);
 
             log.info("[KC Bootstrap] OK ✓");
         }
