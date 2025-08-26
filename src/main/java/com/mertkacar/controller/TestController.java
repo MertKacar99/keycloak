@@ -15,19 +15,21 @@ public class TestController {
     }
 
     @GetMapping("/user/hello")
+    @PreAuthorize("(hasRole('USER') or hasRole('ADMIN')) and hasAuthority('PERM_USERS_UPDATE') and hasAuthority('PERM_USERS_DELETE')")
+
     public String userHello() {
         return "Hello User (authenticated)";
     }
 
     @GetMapping("/admin/hello")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') and hasAuthority('PERM_USERS_UPDATE')")
     public String adminHello() {
         return "Hello Admin (only for ADMIN role)";
     }
 
     // Görüntüleme (READ)
     @GetMapping("/users")
-    @PreAuthorize("hasRole('USER') and hasAuthority('PERM_USERS_READ')")
+    @PreAuthorize("hasRole('ADMIN') and hasAuthority('PERM_USERS_UPDATE')")
     public String listUsers() {
         return "Users listed";
     }

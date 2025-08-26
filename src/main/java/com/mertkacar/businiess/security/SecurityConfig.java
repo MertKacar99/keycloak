@@ -91,7 +91,8 @@ public class SecurityConfig {
             if (realmAccess != null) {
                 Object rolesObj = realmAccess.get("roles");
                 if (rolesObj instanceof Collection<?> roles) {
-                    roles.forEach(r -> out.add(new SimpleGrantedAuthority(  r.toString())));
+                    roles.forEach(r -> out.add(new SimpleGrantedAuthority(r.toString())));
+                    // TODO: ROLE_ prefixi  eklemedim eklenebilirdi.
                 }
             }
 
@@ -107,7 +108,10 @@ public class SecurityConfig {
                 }
             }
 
-            return out; // ✅ Artık List<GrantedAuthority> döndürüyoruz
+
+
+
+            return out;
         });
         return converter;
     }
