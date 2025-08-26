@@ -2,22 +2,35 @@ package com.mertkacar.businiess.concretes;
 
 import com.mertkacar.businiess.abstracts.UnitService;
 import com.mertkacar.dto.requests.UnitRequest;
+import com.mertkacar.model.Institution;
 import com.mertkacar.model.Unit;
+import com.mertkacar.repository.InstitutionRepository;
 import com.mertkacar.repository.UnitRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
 public class UnitManager  implements UnitService {
     private final UnitRepository uniRepository;
+    private final InstitutionRepository institutionRepository;
     @Override
     public Unit create(UnitRequest req) {
-         Unit unit = new Unit().builder()
-                 .name(req.getName()).build();
+         Unit unit = new Unit();
+         unit.setName(req.getName());
+         if(req.getInstitutionId() != null){
+//             institutionRepository.findById(req.getInstitutionId()).ifPresent(unit::setInstitution);
+           Institution institution=  institutionRepository.findById(req.getInstitutionId()).orElseThrow(
+                   () -> new RuntimeException("Institution not found")
+           );
+           unit.setInstitution(institution);
+           uniRepository.save(unit);
+           return unit;
+         }
          uniRepository.save(unit);
         return  unit;
     }
